@@ -79,6 +79,17 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 8),
+            Center(
+              child: Text(
+                '© 2026 ABH Softworks. All Rights Reserved.',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
           ],
         ),
       ),

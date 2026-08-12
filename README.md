@@ -36,4 +36,4 @@ This app is designed with a privacy-first approach. Because all operations are l
 Additionally, the repository is configured to exclude sensitive keys (`key.properties`, `.keystore`, `.env`, `google-services.json`) from version control to prevent accidental leaks.
 
 ## License
-[Add your license here, e.g., MIT License]
+© 2026 ABH Softworks. All Rights Reserved.
