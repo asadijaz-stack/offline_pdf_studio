@@ -19,6 +19,9 @@ subprojects {
     project.evaluationDependsOn(":app")
     if (project.name == "receive_sharing_intent") {
         project.apply(plugin = "org.jetbrains.kotlin.android")
+        project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class) {
+            compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+        }
     }
 }
 

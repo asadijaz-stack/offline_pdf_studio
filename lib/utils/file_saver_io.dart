@@ -1,15 +1,25 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 
+import 'dart:typed_data';
+
 Future<String?> saveFileImpl(List<int> bytes, String fileName) async {
   String? outputFile = await FilePicker.saveFile(
     dialogTitle: 'Save Your File',
     fileName: fileName,
+    bytes: Uint8List.fromList(bytes),
   );
 
   if (outputFile != null) {
-    final file = File(outputFile);
-    await file.writeAsBytes(bytes, flush: true);
+    try {
+      final file = File(outputFile);
+      if (!await file.exists() || (await file.length()) == 0) {
+        await file.writeAsBytes(bytes, flush: true);
+      }
+    } catch (e) {
+      // file_picker might have already saved the bytes natively using the passed `bytes` parameter.
+      // If we can't write to the path directly using dart:io, it's likely handled by the native platform.
+    }
     return outputFile;
   }
   return null;

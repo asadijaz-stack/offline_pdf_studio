@@ -20,11 +20,19 @@ class PdfService {
           loadedDocument = PdfDocument(inputBytes: file.readAsBytesSync());
         }
         
+        PdfSection? section;
         for (int j = 0; j < loadedDocument.pages.count; j++) {
           final PdfPage templatePage = loadedDocument.pages[j];
-          final PdfPage newPage = document.pages.add();
-          newPage.graphics.drawPdfTemplate(
-            templatePage.createTemplate(),
+          final PdfTemplate template = templatePage.createTemplate();
+          
+          if (section == null || section.pageSettings.size != template.size) {
+            section = document.sections!.add();
+            section.pageSettings.size = template.size;
+            section.pageSettings.margins.all = 0;
+          }
+          
+          section.pages.add().graphics.drawPdfTemplate(
+            template,
             const Offset(0, 0),
           );
         }

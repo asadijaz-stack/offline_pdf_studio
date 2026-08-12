@@ -1,10 +1,9 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import '../services/pdf_service.dart';
 import '../utils/file_saver.dart';
+import '../widgets/pdf_viewer_scaffold.dart';
 import 'success_screen.dart';
 
 class SplitPreviewScreen extends StatefulWidget {
@@ -18,10 +17,13 @@ class SplitPreviewScreen extends StatefulWidget {
 
 class _SplitPreviewScreenState extends State<SplitPreviewScreen> {
   final TextEditingController _rangeController = TextEditingController();
-  final PdfViewerController _pdfViewerController = PdfViewerController();
   bool _isProcessing = false;
-  int _currentPage = 1;
-  int _pageCount = 0;
+
+  @override
+  void dispose() {
+    _rangeController.dispose();
+    super.dispose();
+  }
 
   List<int> _parsePageRange(String input) {
     // E.g., "1, 3, 5-7" -> [0, 2, 4, 5, 6] (0-indexed)
@@ -108,132 +110,50 @@ class _SplitPreviewScreenState extends State<SplitPreviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: const Text(
-          'Split PDF',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 20, letterSpacing: -0.5),
+    return PdfViewerScaffold(
+      title: 'Split PDF',
+      filePath: widget.file.path,
+      fileBytes: widget.file.bytes,
+      bottomActionWidget: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, -2))
+          ],
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1E1E1E),
-        elevation: 0,
-        scrolledUnderElevation: 1,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.zoom_out),
-            onPressed: () {
-              if (_pdfViewerController.zoomLevel > 1.0) {
-                _pdfViewerController.zoomLevel = _pdfViewerController.zoomLevel - 0.5;
-              }
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.zoom_in),
-            onPressed: () {
-              _pdfViewerController.zoomLevel = _pdfViewerController.zoomLevel + 0.5;
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: () => _pdfViewerController.previousPage(),
-          ),
-          if (_pageCount > 0)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
-              child: Center(
-                child: Text(
-                  '$_currentPage / $_pageCount',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _rangeController,
+                decoration: const InputDecoration(
+                  labelText: 'Pages to Extract',
+                  hintText: 'e.g. 1, 3, 5-7',
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
               ),
             ),
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: () => _pdfViewerController.nextPage(),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: (kIsWeb && widget.file.bytes != null)
-                ? SfPdfViewer.memory(
-                    widget.file.bytes!,
-                    controller: _pdfViewerController,
-                    pageLayoutMode: PdfPageLayoutMode.single,
-                    onDocumentLoaded: (PdfDocumentLoadedDetails details) {
-                      setState(() {
-                        _pageCount = details.document.pages.count;
-                      });
-                    },
-                    onPageChanged: (PdfPageChangedDetails details) {
-                      setState(() {
-                        _currentPage = details.newPageNumber;
-                      });
-                    },
-                  )
-                : (widget.file.path != null)
-                    ? SfPdfViewer.file(
-                        File(widget.file.path!),
-                        controller: _pdfViewerController,
-                        pageLayoutMode: PdfPageLayoutMode.single,
-                        onDocumentLoaded: (PdfDocumentLoadedDetails details) {
-                          setState(() {
-                            _pageCount = details.document.pages.count;
-                          });
-                        },
-                        onPageChanged: (PdfPageChangedDetails details) {
-                          setState(() {
-                            _currentPage = details.newPageNumber;
-                          });
-                        },
-                      )
-                    : const Center(child: Text('Invalid File')),
-          ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, -2))
-              ],
+            const SizedBox(width: 16),
+            ElevatedButton.icon(
+              onPressed: _isProcessing ? null : _splitAndSave,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFD32F2F),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              ),
+              icon: _isProcessing
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  : const Icon(Icons.call_split),
+              label: Text(_isProcessing ? 'Processing' : 'Split'),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _rangeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Pages to Extract',
-                      hintText: 'e.g. 1, 3, 5-7',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton.icon(
-                  onPressed: _isProcessing ? null : _splitAndSave,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD32F2F),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                  ),
-                  icon: _isProcessing
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                        )
-                      : const Icon(Icons.call_split),
-                  label: Text(_isProcessing ? 'Processing' : 'Split'),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

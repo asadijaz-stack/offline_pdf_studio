@@ -90,9 +90,19 @@ class SuccessScreen extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                               ),
-                              onPressed: () {
+                              onPressed: () async {
                                 if (filePath != 'Web Download') {
-                                  OpenFilex.open(filePath);
+                                  final result = await OpenFilex.open(filePath);
+                                  if (result.type != ResultType.done) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Could not open file: ${result.message}'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  }
                                 }
                               },
                               icon: const Icon(Icons.folder_open_rounded),
