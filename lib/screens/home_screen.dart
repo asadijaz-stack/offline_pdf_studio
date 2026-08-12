@@ -2,24 +2,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_filex/open_filex.dart';
-
-import '../services/pdf_service.dart';
 import '../widgets/ad_banner.dart';
-import 'success_screen.dart';
 import 'pdf_viewer_screen.dart';
 import 'merge_preview_screen.dart';
 import 'split_preview_screen.dart';
+import 'compress_preview_screen.dart';
 import 'image_to_pdf_screen.dart';
 import 'pdf_to_image_screen.dart';
 import 'privacy_policy_screen.dart';
-import '../utils/file_saver.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   void _handleToolAction(BuildContext context, String title) async {
-    String? resultPath;
-
     try {
       if (title == 'Merge PDFs') {
         FilePickerResult? result = await FilePicker.pickFiles(
@@ -56,45 +51,13 @@ class HomeScreen extends StatelessWidget {
           allowedExtensions: ['pdf'],
           withData: kIsWeb,
         );
-        if (result != null) {
-          if (context.mounted) {
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (_) => const Center(
-                child: SizedBox(
-                  width: 50,
-                  height: 50,
-                  child: CircularProgressIndicator(color: Color(0xFFD32F2F), strokeWidth: 3),
-                ),
-              ),
-            );
-            // Allow UI to paint the dialog before blocking the thread
-            await Future.delayed(const Duration(milliseconds: 100));
-          }
-          
-          dynamic input = kIsWeb ? result.files.single.bytes : result.files.single.path;
-          final bytes = await PdfService.compressPdf(input);
-          
-          if (context.mounted) {
-            Navigator.pop(context); // Close the dialog
-          }
-          
-          if (bytes != null) {
-            resultPath = await FileSaver.saveFile(bytes, 'compressed_document.pdf');
-            if (context.mounted && resultPath != null) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => SuccessScreen(filePath: resultPath!, fileBytes: bytes),
-                ),
-              );
-            }
-          } else if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Failed to compress PDF.')),
-            );
-          }
+        if (result != null && context.mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CompressPreviewScreen(file: result.files.single),
+            ),
+          );
         }
       } else if (title == 'Image to PDF') {
         FilePickerResult? result = await FilePicker.pickFiles(
@@ -160,17 +123,6 @@ class HomeScreen extends StatelessWidget {
           }
         }
         return;
-      }
-
-      if (resultPath != null || (kIsWeb && resultPath == 'Web download triggered')) {
-        if (context.mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => SuccessScreen(filePath: resultPath ?? 'Web Download'),
-            ),
-          );
-        }
       }
     } catch (e) {
       if (context.mounted) {

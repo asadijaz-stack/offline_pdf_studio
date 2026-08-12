@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import '../services/pdf_service.dart';
 import '../utils/file_saver.dart';
 import '../widgets/pdf_viewer_scaffold.dart';
+import '../mixins/processing_state_mixin.dart';
 import 'success_screen.dart';
 
 class SplitPreviewScreen extends StatefulWidget {
@@ -15,9 +16,8 @@ class SplitPreviewScreen extends StatefulWidget {
   State<SplitPreviewScreen> createState() => _SplitPreviewScreenState();
 }
 
-class _SplitPreviewScreenState extends State<SplitPreviewScreen> {
+class _SplitPreviewScreenState extends State<SplitPreviewScreen> with ProcessingStateMixin {
   final TextEditingController _rangeController = TextEditingController();
-  bool _isProcessing = false;
 
   @override
   void dispose() {
@@ -58,20 +58,11 @@ class _SplitPreviewScreenState extends State<SplitPreviewScreen> {
   Future<void> _splitAndSave() async {
     final pagesToExtract = _parsePageRange(_rangeController.text);
     if (pagesToExtract.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid page range (e.g., 1, 3, 5-7).')),
-      );
+      showErrorSnackBar('Please enter a valid page range (e.g., 1, 3, 5-7).');
       return;
     }
 
-    setState(() {
-      _isProcessing = true;
-    });
-    
-    // Allow UI to paint the progress indicator before CPU-bound operations
-    await Future.delayed(const Duration(milliseconds: 100));
-
-    try {
+    await runProcessingTask(() async {
       dynamic input = kIsWeb ? widget.file.bytes : widget.file.path;
       final Uint8List? resultBytes = await PdfService.splitPdf(input, pagesToExtract);
 
@@ -87,25 +78,9 @@ class _SplitPreviewScreenState extends State<SplitPreviewScreen> {
           );
         }
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to split PDF.')),
-          );
-        }
+        showErrorSnackBar('Failed to split PDF.');
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isProcessing = false;
-        });
-      }
-    }
+    });
   }
 
   @override
@@ -137,20 +112,20 @@ class _SplitPreviewScreenState extends State<SplitPreviewScreen> {
             ),
             const SizedBox(width: 16),
             ElevatedButton.icon(
-              onPressed: _isProcessing ? null : _splitAndSave,
+              onPressed: isProcessing ? null : _splitAndSave,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFD32F2F),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
               ),
-              icon: _isProcessing
+              icon: isProcessing
                   ? const SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                     )
                   : const Icon(Icons.call_split),
-              label: Text(_isProcessing ? 'Processing' : 'Split'),
+              label: Text(isProcessing ? 'Processing' : 'Split'),
             ),
           ],
         ),

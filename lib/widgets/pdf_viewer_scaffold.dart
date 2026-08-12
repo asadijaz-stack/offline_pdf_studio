@@ -142,7 +142,7 @@ class _PdfViewerScaffoldState extends State<PdfViewerScaffold> {
       body: Column(
         children: [
           Expanded(
-            child: (kIsWeb && widget.fileBytes != null)
+            child: (widget.fileBytes != null)
                 ? SfPdfViewer.memory(
                     widget.fileBytes!,
                     controller: _pdfViewerController,

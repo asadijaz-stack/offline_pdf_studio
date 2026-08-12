@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/pdf_service.dart';
 import '../utils/file_saver.dart';
+import '../mixins/processing_state_mixin.dart';
 import 'success_screen.dart';
 
 class MergePreviewScreen extends StatefulWidget {
@@ -14,9 +15,8 @@ class MergePreviewScreen extends StatefulWidget {
   State<MergePreviewScreen> createState() => _MergePreviewScreenState();
 }
 
-class _MergePreviewScreenState extends State<MergePreviewScreen> {
+class _MergePreviewScreenState extends State<MergePreviewScreen> with ProcessingStateMixin {
   late List<PlatformFile> _files;
-  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -35,14 +35,7 @@ class _MergePreviewScreenState extends State<MergePreviewScreen> {
   }
 
   Future<void> _mergeAndSave() async {
-    setState(() {
-      _isProcessing = true;
-    });
-    
-    // Allow UI to paint the progress indicator before CPU-bound operations
-    await Future.delayed(const Duration(milliseconds: 100));
-
-    try {
+    await runProcessingTask(() async {
       List<String> paths = [];
       List<Uint8List> bytes = [];
 
@@ -66,25 +59,9 @@ class _MergePreviewScreenState extends State<MergePreviewScreen> {
           );
         }
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to merge PDFs.')),
-          );
-        }
+        showErrorSnackBar('Failed to merge PDFs.');
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isProcessing = false;
-        });
-      }
-    }
+    });
   }
 
   @override
@@ -123,17 +100,17 @@ class _MergePreviewScreenState extends State<MergePreviewScreen> {
               },
             ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isProcessing ? null : _mergeAndSave,
+        onPressed: isProcessing ? null : _mergeAndSave,
         backgroundColor: const Color(0xFFD32F2F),
         foregroundColor: Colors.white,
-        icon: _isProcessing
+        icon: isProcessing
             ? const SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
               )
             : const Icon(Icons.save),
-        label: Text(_isProcessing ? 'Merging...' : 'Merge & Save'),
+        label: Text(isProcessing ? 'Merging...' : 'Merge & Save'),
       ),
     );
   }

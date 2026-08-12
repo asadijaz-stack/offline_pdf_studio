@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/pdf_service.dart';
 import '../utils/file_saver.dart';
+import '../mixins/processing_state_mixin.dart';
 import 'success_screen.dart';
 
 class ImageToPdfScreen extends StatefulWidget {
@@ -15,9 +16,8 @@ class ImageToPdfScreen extends StatefulWidget {
   State<ImageToPdfScreen> createState() => _ImageToPdfScreenState();
 }
 
-class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
+class _ImageToPdfScreenState extends State<ImageToPdfScreen> with ProcessingStateMixin {
   late List<PlatformFile> _images;
-  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -35,15 +35,8 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
     });
   }
 
-  Future<void> _convertAndSave() async {
-    setState(() {
-      _isProcessing = true;
-    });
-    
-    // Allow UI to paint the progress indicator before CPU-bound operations
-    await Future.delayed(const Duration(milliseconds: 100));
-
-    try {
+  Future<void> _convertToPdf() async {
+    await runProcessingTask(() async {
       List<dynamic> inputs = kIsWeb
           ? _images.map((e) => e.bytes!).toList()
           : _images.map((e) => e.path!).toList();
@@ -51,7 +44,7 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
       final Uint8List? resultBytes = await PdfService.imagesToPdf(inputs);
 
       if (resultBytes != null) {
-        final String? savedPath = await FileSaver.saveFile(resultBytes, 'images_document.pdf');
+        final String? savedPath = await FileSaver.saveFile(resultBytes, 'converted_document.pdf');
         
         if (mounted && savedPath != null) {
           Navigator.pushReplacement(
@@ -62,25 +55,9 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
           );
         }
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to convert images to PDF.')),
-          );
-        }
+        showErrorSnackBar('Failed to convert images to PDF.');
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isProcessing = false;
-        });
-      }
-    }
+    });
   }
 
   @override
@@ -130,17 +107,17 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
               },
             ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isProcessing ? null : _convertAndSave,
+        onPressed: isProcessing ? null : _convertToPdf,
         backgroundColor: const Color(0xFFD32F2F),
         foregroundColor: Colors.white,
-        icon: _isProcessing
+        icon: isProcessing
             ? const SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
               )
             : const Icon(Icons.picture_as_pdf),
-        label: Text(_isProcessing ? 'Converting...' : 'Convert to PDF'),
+        label: Text(isProcessing ? 'Converting...' : 'Convert to PDF'),
       ),
     );
   }

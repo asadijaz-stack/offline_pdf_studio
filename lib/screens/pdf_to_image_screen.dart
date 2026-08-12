@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import '../services/pdf_service.dart';
 import '../utils/file_saver.dart';
 import '../widgets/pdf_viewer_scaffold.dart';
+import '../mixins/processing_state_mixin.dart';
 import 'success_screen.dart';
 
 class PdfToImageScreen extends StatefulWidget {
@@ -15,10 +16,9 @@ class PdfToImageScreen extends StatefulWidget {
   State<PdfToImageScreen> createState() => _PdfToImageScreenState();
 }
 
-class _PdfToImageScreenState extends State<PdfToImageScreen> {
+class _PdfToImageScreenState extends State<PdfToImageScreen> with ProcessingStateMixin {
   final TextEditingController _pageController = TextEditingController(text: '1');
   bool _convertAll = false;
-  bool _isProcessing = false;
 
   @override
   void dispose() {
@@ -31,21 +31,12 @@ class _PdfToImageScreenState extends State<PdfToImageScreen> {
       final int? pageNumber = int.tryParse(_pageController.text.trim());
       
       if (pageNumber == null || pageNumber < 1) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter a valid positive page number.')),
-        );
+        showErrorSnackBar('Please enter a valid positive page number.');
         return;
       }
     }
 
-    setState(() {
-      _isProcessing = true;
-    });
-    
-    // Allow UI to paint the progress indicator before CPU-bound operations
-    await Future.delayed(const Duration(milliseconds: 100));
-
-    try {
+    await runProcessingTask(() async {
       dynamic input = kIsWeb ? widget.file.bytes : widget.file.path;
       
       if (_convertAll) {
@@ -67,11 +58,7 @@ class _PdfToImageScreenState extends State<PdfToImageScreen> {
             );
           }
         } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Failed to extract images.')),
-            );
-          }
+          showErrorSnackBar('Failed to extract images.');
         }
       } else {
         final int pageNumber = int.parse(_pageController.text.trim());
@@ -93,26 +80,10 @@ class _PdfToImageScreenState extends State<PdfToImageScreen> {
             );
           }
         } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Failed to extract page as image.')),
-            );
-          }
+          showErrorSnackBar('Failed to extract page as image.');
         }
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isProcessing = false;
-        });
-      }
-    }
+    });
   }
 
   @override
@@ -149,20 +120,20 @@ class _PdfToImageScreenState extends State<PdfToImageScreen> {
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton.icon(
-                  onPressed: _isProcessing ? null : _convertAndSave,
+                  onPressed: isProcessing ? null : _convertAndSave,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFD32F2F),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                   ),
-                  icon: _isProcessing
+                  icon: isProcessing
                       ? const SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
                       : const Icon(Icons.image),
-                  label: Text(_isProcessing ? 'Processing' : (_convertAll ? 'Export All' : 'Export PNG')),
+                  label: Text(isProcessing ? 'Processing' : (_convertAll ? 'Export All' : 'Export PNG')),
                 ),
               ],
             ),

@@ -34,8 +34,6 @@ Future<String?> saveMultipleFilesImpl(List<List<int>> filesBytes, List<String> f
     archive.addFile(archiveFile);
   }
   final zipData = ZipEncoder().encode(archive);
-  
-  if (zipData == null) return null;
 
   String? outputFile = await FilePicker.saveFile(
     dialogTitle: 'Save Your Images ZIP',
