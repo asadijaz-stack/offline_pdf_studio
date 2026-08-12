@@ -59,7 +59,10 @@ class _PdfToImageScreenState extends State<PdfToImageScreen> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (_) => SuccessScreen(filePath: savedPath),
+                builder: (_) => SuccessScreen(
+                  filePath: savedPath,
+                  multiFileBytes: resultBytesList,
+                ),
               ),
             );
           }
@@ -81,7 +84,11 @@ class _PdfToImageScreenState extends State<PdfToImageScreen> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (_) => SuccessScreen(filePath: savedPath),
+                builder: (_) => SuccessScreen(
+                  filePath: savedPath,
+                  fileBytes: resultBytes,
+                  isImage: true,
+                ),
               ),
             );
           }

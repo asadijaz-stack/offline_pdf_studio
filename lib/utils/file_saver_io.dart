@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'package:archive/archive.dart';
 
 import 'dart:typed_data';
 
@@ -26,16 +27,32 @@ Future<String?> saveFileImpl(List<int> bytes, String fileName) async {
 }
 
 Future<String?> saveMultipleFilesImpl(List<List<int>> filesBytes, List<String> fileNames, String zipName) async {
-  String? directoryPath = await FilePicker.getDirectoryPath(
-    dialogTitle: 'Select Directory to Save Files',
+  
+  final archive = Archive();
+  for (int i = 0; i < filesBytes.length; i++) {
+    final archiveFile = ArchiveFile(fileNames[i], filesBytes[i].length, filesBytes[i]);
+    archive.addFile(archiveFile);
+  }
+  final zipData = ZipEncoder().encode(archive);
+  
+  if (zipData == null) return null;
+
+  String? outputFile = await FilePicker.saveFile(
+    dialogTitle: 'Save Your Images ZIP',
+    fileName: zipName,
+    bytes: Uint8List.fromList(zipData),
   );
 
-  if (directoryPath != null) {
-    for (int i = 0; i < filesBytes.length; i++) {
-      final file = File('$directoryPath/${fileNames[i]}');
-      await file.writeAsBytes(filesBytes[i], flush: true);
+  if (outputFile != null) {
+    try {
+      final file = File(outputFile);
+      if (!await file.exists() || (await file.length()) == 0) {
+        await file.writeAsBytes(zipData, flush: true);
+      }
+    } catch (e) {
+      // Handled natively by file_picker
     }
-    return directoryPath;
+    return outputFile;
   }
   return null;
 }

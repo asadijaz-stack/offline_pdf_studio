@@ -1,13 +1,23 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:open_filex/open_filex.dart';
+import 'dart:typed_data';
 
 import '../widgets/ad_banner.dart';
+import 'pdf_viewer_screen.dart';
 
 class SuccessScreen extends StatelessWidget {
   final String filePath;
+  final Uint8List? fileBytes;
+  final List<Uint8List>? multiFileBytes;
+  final bool isImage;
 
-  const SuccessScreen({super.key, required this.filePath});
+  const SuccessScreen({
+    super.key,
+    required this.filePath,
+    this.fileBytes,
+    this.multiFileBytes,
+    this.isImage = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +78,9 @@ class SuccessScreen extends StatelessWidget {
                         
                         if (!kIsWeb && filePath != 'Web Download')
                           Text(
-                            'Your file has been processed locally and saved securely to:\n$filePath',
+                            (filePath.startsWith('/document/') || filePath.startsWith('content://'))
+                                ? 'Your file has been processed locally and saved securely to the location you selected.'
+                                : 'Your file has been processed locally and saved securely to:\n$filePath',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   color: const Color(0xFF757575),
                                   height: 1.5,
@@ -78,7 +90,7 @@ class SuccessScreen extends StatelessWidget {
                         const SizedBox(height: 48),
 
                         // Action Buttons (Material 3 Style)
-                        if (!kIsWeb)
+                        if (fileBytes != null || multiFileBytes != null)
                           SizedBox(
                             width: double.infinity,
                             height: 56,
@@ -90,29 +102,84 @@ class SuccessScreen extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                               ),
-                              onPressed: () async {
-                                if (filePath != 'Web Download') {
-                                  final result = await OpenFilex.open(filePath);
-                                  if (result.type != ResultType.done) {
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text('Could not open file: ${result.message}'),
-                                          backgroundColor: Colors.red,
-                                        ),
-                                      );
-                                    }
-                                  }
+                              onPressed: () {
+                                if (multiFileBytes != null && multiFileBytes!.isNotEmpty) {
+                                  showDialog(
+                                    context: context,
+                                    builder: (_) => Dialog(
+                                      backgroundColor: Colors.black87,
+                                      child: Stack(
+                                        children: [
+                                          PageView.builder(
+                                            itemCount: multiFileBytes!.length,
+                                            itemBuilder: (context, index) {
+                                              return InteractiveViewer(
+                                                child: Image.memory(multiFileBytes![index]),
+                                              );
+                                            },
+                                          ),
+                                          Positioned(
+                                            top: 10,
+                                            right: 10,
+                                            child: IconButton(
+                                              icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                                              onPressed: () => Navigator.pop(context),
+                                            ),
+                                          ),
+                                          const Positioned(
+                                            bottom: 20,
+                                            left: 0,
+                                            right: 0,
+                                            child: Center(
+                                              child: Text(
+                                                'Swipe to view pages',
+                                                style: TextStyle(color: Colors.white70, fontSize: 16),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                } else if (isImage) {
+                                  showDialog(
+                                    context: context,
+                                    builder: (_) => Dialog(
+                                      backgroundColor: Colors.transparent,
+                                      child: Stack(
+                                        alignment: Alignment.topRight,
+                                        children: [
+                                          InteractiveViewer(
+                                            child: Image.memory(fileBytes!),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                                            onPressed: () => Navigator.pop(context),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => PdfViewerScreen(
+                                        fileBytes: fileBytes,
+                                      ),
+                                    ),
+                                  );
                                 }
                               },
-                              icon: const Icon(Icons.folder_open_rounded),
-                              label: const Text(
-                                'Open File',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                              icon: const Icon(Icons.preview_rounded),
+                              label: Text(
+                                multiFileBytes != null ? 'Preview Images' : 'Preview File',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                               ),
                             ),
                           ),
-                        const SizedBox(height: 16),
+                        if (fileBytes != null || multiFileBytes != null)
+                          const SizedBox(height: 16),
                         
                         SizedBox(
                           width: double.infinity,

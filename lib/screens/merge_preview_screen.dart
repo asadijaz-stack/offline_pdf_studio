@@ -61,7 +61,7 @@ class _MergePreviewScreenState extends State<MergePreviewScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (_) => SuccessScreen(filePath: savedPath),
+              builder: (_) => SuccessScreen(filePath: savedPath, fileBytes: resultBytes),
             ),
           );
         }

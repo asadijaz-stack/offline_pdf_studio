@@ -82,6 +82,14 @@ class HomeScreen extends StatelessWidget {
           
           if (bytes != null) {
             resultPath = await FileSaver.saveFile(bytes, 'compressed_document.pdf');
+            if (context.mounted && resultPath != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SuccessScreen(filePath: resultPath!, fileBytes: bytes),
+                ),
+              );
+            }
           } else if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Failed to compress PDF.')),
