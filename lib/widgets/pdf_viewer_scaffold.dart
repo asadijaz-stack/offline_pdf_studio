@@ -45,8 +45,10 @@ class _PdfViewerScaffoldState extends State<PdfViewerScaffold> {
             ? TextField(
                 controller: _searchController,
                 autofocus: true,
+                style: const TextStyle(color: Colors.black, fontSize: 18),
                 decoration: const InputDecoration(
                   hintText: 'Search...',
+                  hintStyle: TextStyle(color: Colors.black54),
                   border: InputBorder.none,
                 ),
                 onSubmitted: (String value) {
