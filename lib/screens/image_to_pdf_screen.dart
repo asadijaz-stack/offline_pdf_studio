@@ -116,9 +116,9 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: (kIsWeb && file.bytes != null)
-                            ? Image.memory(file.bytes!, fit: BoxFit.cover)
+                            ? Image.memory(file.bytes!, fit: BoxFit.cover, cacheWidth: 150)
                             : (file.path != null)
-                                ? Image.file(File(file.path!), fit: BoxFit.cover)
+                                ? Image.file(File(file.path!), fit: BoxFit.cover, cacheWidth: 150)
                                 : const Icon(Icons.image),
                       ),
                     ),

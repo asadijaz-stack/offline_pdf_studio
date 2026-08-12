@@ -91,7 +91,8 @@ class HomeScreen extends StatelessWidget {
       } else if (title == 'Image to PDF') {
         FilePickerResult? result = await FilePicker.pickFiles(
           allowMultiple: true,
-          type: FileType.image,
+          type: FileType.custom,
+          allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'bmp'],
           withData: kIsWeb,
         );
         if (result != null && context.mounted) {
