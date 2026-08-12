@@ -103,40 +103,40 @@ class _PdfViewerScaffoldState extends State<PdfViewerScaffold> {
                 });
               },
             ),
-          ],
-          IconButton(
-            icon: const Icon(Icons.zoom_out),
-            onPressed: () {
-              if (_pdfViewerController.zoomLevel > 1.0) {
-                _pdfViewerController.zoomLevel = _pdfViewerController.zoomLevel - 0.5;
-              }
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.zoom_in),
-            onPressed: () {
-              _pdfViewerController.zoomLevel = _pdfViewerController.zoomLevel + 0.5;
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: () => _pdfViewerController.previousPage(),
-          ),
-          if (_pageCount > 0)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
-              child: Center(
-                child: Text(
-                  '$_currentPage / $_pageCount',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            IconButton(
+              icon: const Icon(Icons.zoom_out),
+              onPressed: () {
+                if (_pdfViewerController.zoomLevel > 1.0) {
+                  _pdfViewerController.zoomLevel = _pdfViewerController.zoomLevel - 0.5;
+                }
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.zoom_in),
+              onPressed: () {
+                _pdfViewerController.zoomLevel = _pdfViewerController.zoomLevel + 0.5;
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.chevron_left),
+              onPressed: () => _pdfViewerController.previousPage(),
+            ),
+            if (_pageCount > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: Center(
+                  child: Text(
+                    '$_currentPage / $_pageCount',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
                 ),
               ),
+            IconButton(
+              icon: const Icon(Icons.chevron_right),
+              onPressed: () => _pdfViewerController.nextPage(),
             ),
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: () => _pdfViewerController.nextPage(),
-          ),
-          const SizedBox(width: 8),
+            const SizedBox(width: 8),
+          ],
         ],
       ),
       body: Column(
