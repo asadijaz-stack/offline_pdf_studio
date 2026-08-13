@@ -45,6 +45,7 @@ dependencies:
   pdfx: any
   archive: any
   receive_sharing_intent: 1.8.0
+  pdf_combiner: ^6.2.0
 
 dev_dependencies:
   flutter_test:

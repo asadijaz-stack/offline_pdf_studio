@@ -3,48 +3,56 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:pdfx/pdfx.dart' as pdfx;
+import 'package:pdf_combiner/pdf_combiner.dart';
+import 'package:pdf_combiner/models/merge_input.dart';
+import 'package:path_provider/path_provider.dart';
 
 class PdfService {
-  /// Merges multiple PDFs into a single document.
   static Future<Uint8List?> mergePdfs(List<String> filePaths, List<Uint8List> fileBytes) async {
     try {
       final int count = kIsWeb ? fileBytes.length : filePaths.length;
       if (count == 0) return null;
 
-      // Load the first file as the base document
-      final PdfDocument document = PdfDocument();
-      PdfSection? currentSection;
-      
-      for (int i = 0; i < count; i++) {
-        PdfDocument loadedDocument;
-        if (kIsWeb) {
-          loadedDocument = PdfDocument(inputBytes: fileBytes[i]);
-        } else {
-          final File file = File(filePaths[i]);
-          loadedDocument = PdfDocument(inputBytes: file.readAsBytesSync());
-        }
-        
-        for (int j = 0; j < loadedDocument.pages.count; j++) {
-          final PdfPage sourcePage = loadedDocument.pages[j];
-          final PdfTemplate template = sourcePage.createTemplate();
-          
-          // Create a new section if this is the first page or if the size changes
-          if (currentSection == null || currentSection.pageSettings.size != template.size) {
-            currentSection = document.sections!.add();
-            currentSection.pageSettings.size = template.size;
-            currentSection.pageSettings.margins.all = 0;
+      if (kIsWeb) {
+        // Web fallback using Syncfusion
+        final PdfDocument document = PdfDocument();
+        for (int i = 0; i < count; i++) {
+          final PdfDocument loadedDocument = PdfDocument(inputBytes: fileBytes[i]);
+          for (int j = 0; j < loadedDocument.pages.count; j++) {
+            final PdfPage sourcePage = loadedDocument.pages[j];
+            final PdfTemplate template = sourcePage.createTemplate();
+            final PdfSection section = document.sections!.add();
+            section.pageSettings.size = template.size;
+            section.pageSettings.margins.all = 0;
+            section.pages.add().graphics.drawPdfTemplate(template, const Offset(0, 0));
           }
-          
-          final PdfPage newPage = currentSection.pages.add();
-          newPage.graphics.drawPdfTemplate(template, const Offset(0, 0));
+          loadedDocument.dispose();
         }
-        loadedDocument.dispose();
+        final List<int> bytes = document.saveSync();
+        document.dispose();
+        return Uint8List.fromList(bytes);
       }
+
+      // Native platforms (Android, iOS, Windows, macOS) use pdf_combiner for zero formatting loss
+      final Directory tempDir = await getTemporaryDirectory();
+      final String outputPath = '${tempDir.path}/merged_${DateTime.now().millisecondsSinceEpoch}.pdf';
       
-      final List<int> bytes = document.saveSync();
-      document.dispose();
+      final List<MergeInput> inputs = filePaths.map((path) => MergeInput.path(path)).toList();
       
-      return Uint8List.fromList(bytes);
+      await PdfCombiner.mergeMultiplePDFs(
+        inputs: inputs,
+        outputPath: outputPath,
+      );
+      
+      final File mergedFile = File(outputPath);
+      final Uint8List mergedBytes = mergedFile.readAsBytesSync();
+      
+      // Clean up the temporary file
+      try {
+        mergedFile.deleteSync();
+      } catch (_) {}
+      
+      return mergedBytes;
     } catch (e) {
       debugPrint('Error merging PDFs: $e');
       return null;
