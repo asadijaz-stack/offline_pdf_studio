@@ -12,15 +12,10 @@ class PdfService {
       if (count == 0) return null;
 
       // Load the first file as the base document
-      PdfDocument document;
-      if (kIsWeb) {
-        document = PdfDocument(inputBytes: fileBytes[0]);
-      } else {
-        document = PdfDocument(inputBytes: File(filePaths[0]).readAsBytesSync());
-      }
+      final PdfDocument document = PdfDocument();
+      PdfSection? currentSection;
       
-      // Append subsequent files to the base document
-      for (int i = 1; i < count; i++) {
+      for (int i = 0; i < count; i++) {
         PdfDocument loadedDocument;
         if (kIsWeb) {
           loadedDocument = PdfDocument(inputBytes: fileBytes[i]);
@@ -33,12 +28,14 @@ class PdfService {
           final PdfPage sourcePage = loadedDocument.pages[j];
           final PdfTemplate template = sourcePage.createTemplate();
           
-          // Modify the base document's page settings on the fly to match the template size
-          document.pageSettings.size = template.size;
-          document.pageSettings.margins.all = 0;
+          // Create a new section if this is the first page or if the size changes
+          if (currentSection == null || currentSection.pageSettings.size != template.size) {
+            currentSection = document.sections!.add();
+            currentSection.pageSettings.size = template.size;
+            currentSection.pageSettings.margins.all = 0;
+          }
           
-          // Add the new page and draw the template
-          final PdfPage newPage = document.pages.add();
+          final PdfPage newPage = currentSection.pages.add();
           newPage.graphics.drawPdfTemplate(template, const Offset(0, 0));
         }
         loadedDocument.dispose();
