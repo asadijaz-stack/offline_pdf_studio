@@ -26,12 +26,10 @@ class PdfService {
           final PdfPage templatePage = loadedDocument.pages[j];
           final PdfTemplate template = templatePage.createTemplate();
           
-          if (section == null || section.pageSettings.size != templatePage.size) {
+          if (section == null || section.pageSettings.size != template.size) {
             section = document.sections!.add();
-            section.pageSettings.size = templatePage.size;
+            section.pageSettings.size = template.size;
             section.pageSettings.margins.all = 0;
-            // Respect rotation if present
-            section.pageSettings.rotate = templatePage.rotation;
           }
           
           section.pages.add().graphics.drawPdfTemplate(
