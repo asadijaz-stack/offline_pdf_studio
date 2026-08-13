@@ -33,12 +33,12 @@ class PdfService {
           final PdfPage sourcePage = loadedDocument.pages[j];
           final PdfTemplate template = sourcePage.createTemplate();
           
-          // Create a new section for each page to ensure exact sizing matches the template
-          final PdfSection section = document.sections!.add();
-          section.pageSettings.size = template.size;
-          section.pageSettings.margins.all = 0;
+          // Modify the base document's page settings on the fly to match the template size
+          document.pageSettings.size = template.size;
+          document.pageSettings.margins.all = 0;
           
-          final PdfPage newPage = section.pages.add();
+          // Add the new page and draw the template
+          final PdfPage newPage = document.pages.add();
           newPage.graphics.drawPdfTemplate(template, const Offset(0, 0));
         }
         loadedDocument.dispose();
