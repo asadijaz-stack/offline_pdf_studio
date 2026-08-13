@@ -8,11 +8,19 @@ class PdfService {
   /// Merges multiple PDFs into a single document.
   static Future<Uint8List?> mergePdfs(List<String> filePaths, List<Uint8List> fileBytes) async {
     try {
-      final PdfDocument document = PdfDocument();
-      document.pageSettings.margins.all = 0;
-      
       final int count = kIsWeb ? fileBytes.length : filePaths.length;
-      for (int i = 0; i < count; i++) {
+      if (count == 0) return null;
+
+      // Load the first file as the base document
+      PdfDocument document;
+      if (kIsWeb) {
+        document = PdfDocument(inputBytes: fileBytes[0]);
+      } else {
+        document = PdfDocument(inputBytes: File(filePaths[0]).readAsBytesSync());
+      }
+      
+      // Append subsequent files to the base document
+      for (int i = 1; i < count; i++) {
         PdfDocument loadedDocument;
         if (kIsWeb) {
           loadedDocument = PdfDocument(inputBytes: fileBytes[i]);
@@ -21,21 +29,17 @@ class PdfService {
           loadedDocument = PdfDocument(inputBytes: file.readAsBytesSync());
         }
         
-        PdfSection? section;
         for (int j = 0; j < loadedDocument.pages.count; j++) {
-          final PdfPage templatePage = loadedDocument.pages[j];
-          final PdfTemplate template = templatePage.createTemplate();
+          final PdfPage sourcePage = loadedDocument.pages[j];
+          final PdfTemplate template = sourcePage.createTemplate();
           
-          if (section == null || section.pageSettings.size != template.size) {
-            section = document.sections!.add();
-            section.pageSettings.size = template.size;
-            section.pageSettings.margins.all = 0;
-          }
+          // Create a new section for each page to ensure exact sizing matches the template
+          final PdfSection section = document.sections!.add();
+          section.pageSettings.size = template.size;
+          section.pageSettings.margins.all = 0;
           
-          section.pages.add().graphics.drawPdfTemplate(
-            template,
-            const Offset(0, 0),
-          );
+          final PdfPage newPage = section.pages.add();
+          newPage.graphics.drawPdfTemplate(template, const Offset(0, 0));
         }
         loadedDocument.dispose();
       }
