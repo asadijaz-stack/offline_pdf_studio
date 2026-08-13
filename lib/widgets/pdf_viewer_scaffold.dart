@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+import 'ad_banner.dart';
 
 class PdfViewerScaffold extends StatefulWidget {
   final String title;
@@ -177,6 +178,7 @@ class _PdfViewerScaffoldState extends State<PdfViewerScaffold> {
                     : const Center(child: Text('Invalid PDF Source')),
           ),
           if (widget.bottomActionWidget != null) widget.bottomActionWidget!,
+          const AdBannerWidget(),
         ],
       ),
     );

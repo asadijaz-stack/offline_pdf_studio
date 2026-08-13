@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import '../services/pdf_service.dart';
 import '../utils/file_saver.dart';
 import '../mixins/processing_state_mixin.dart';
+import '../widgets/ad_banner.dart';
 import 'success_screen.dart';
 
 class ImageToPdfScreen extends StatefulWidget {
@@ -119,6 +120,7 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> with ProcessingStat
             : const Icon(Icons.picture_as_pdf),
         label: Text(isProcessing ? 'Converting...' : 'Convert to PDF'),
       ),
+      bottomNavigationBar: const AdBannerWidget(),
     );
   }
 }

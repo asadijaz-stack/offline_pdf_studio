@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import '../services/pdf_service.dart';
 import '../utils/file_saver.dart';
 import '../mixins/processing_state_mixin.dart';
+import '../widgets/ad_banner.dart';
 import 'success_screen.dart';
 
 class MergePreviewScreen extends StatefulWidget {
@@ -112,6 +113,7 @@ class _MergePreviewScreenState extends State<MergePreviewScreen> with Processing
             : const Icon(Icons.save),
         label: Text(isProcessing ? 'Merging...' : 'Merge & Save'),
       ),
+      bottomNavigationBar: const AdBannerWidget(),
     );
   }
 }

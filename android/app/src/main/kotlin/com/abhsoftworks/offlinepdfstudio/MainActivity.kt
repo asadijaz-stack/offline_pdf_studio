@@ -1,4 +1,4 @@
-package com.example.offline_pdf_studio
+package com.abhsoftworks.offlinepdfstudio
 
 import io.flutter.embedding.android.FlutterActivity
 

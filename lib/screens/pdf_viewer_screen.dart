@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../widgets/ad_banner.dart';
 import '../widgets/pdf_viewer_scaffold.dart';
 
 class PdfViewerScreen extends StatelessWidget {
@@ -15,7 +14,6 @@ class PdfViewerScreen extends StatelessWidget {
       title: 'PDF Viewer',
       filePath: filePath,
       fileBytes: fileBytes,
-      bottomActionWidget: const AdBannerWidget(),
     );
   }
 }
