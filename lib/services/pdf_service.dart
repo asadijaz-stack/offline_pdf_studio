@@ -9,6 +9,7 @@ class PdfService {
   static Future<Uint8List?> mergePdfs(List<String> filePaths, List<Uint8List> fileBytes) async {
     try {
       final PdfDocument document = PdfDocument();
+      document.pageSettings.margins.all = 0;
       
       final int count = kIsWeb ? fileBytes.length : filePaths.length;
       for (int i = 0; i < count; i++) {
@@ -25,10 +26,12 @@ class PdfService {
           final PdfPage templatePage = loadedDocument.pages[j];
           final PdfTemplate template = templatePage.createTemplate();
           
-          if (section == null || section.pageSettings.size != template.size) {
+          if (section == null || section.pageSettings.size != templatePage.size) {
             section = document.sections!.add();
-            section.pageSettings.size = template.size;
+            section.pageSettings.size = templatePage.size;
             section.pageSettings.margins.all = 0;
+            // Respect rotation if present
+            section.pageSettings.rotate = templatePage.rotation;
           }
           
           section.pages.add().graphics.drawPdfTemplate(
@@ -104,6 +107,7 @@ class PdfService {
   static Future<Uint8List?> imagesToPdf(List<dynamic> imageInputs) async {
     try {
       final PdfDocument document = PdfDocument();
+      document.pageSettings.margins.all = 0;
       
       for (var input in imageInputs) {
         Uint8List imageBytes;
