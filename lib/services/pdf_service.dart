@@ -175,6 +175,7 @@ class PdfService {
         width: page.width * 2.0, 
         height: page.height * 2.0,
         format: pdfx.PdfPageImageFormat.png,
+        backgroundColor: '#FFFFFF',
       );
       
       await page.close();
@@ -204,6 +205,7 @@ class PdfService {
           width: page.width * 2.0, 
           height: page.height * 2.0,
           format: pdfx.PdfPageImageFormat.png,
+          backgroundColor: '#FFFFFF',
         );
         if (pageImage?.bytes != null) {
           images.add(pageImage!.bytes);
