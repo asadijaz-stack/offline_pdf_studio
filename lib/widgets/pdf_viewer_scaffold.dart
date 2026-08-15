@@ -147,7 +147,6 @@ class _PdfViewerScaffoldState extends State<PdfViewerScaffold> {
                 ? SfPdfViewer.memory(
                     widget.fileBytes!,
                     controller: _pdfViewerController,
-                    pageLayoutMode: PdfPageLayoutMode.single,
                     onDocumentLoaded: (PdfDocumentLoadedDetails details) {
                       setState(() {
                         _pageCount = details.document.pages.count;
@@ -163,7 +162,6 @@ class _PdfViewerScaffoldState extends State<PdfViewerScaffold> {
                     ? SfPdfViewer.file(
                         File(widget.filePath!),
                         controller: _pdfViewerController,
-                        pageLayoutMode: PdfPageLayoutMode.single,
                         onDocumentLoaded: (PdfDocumentLoadedDetails details) {
                           setState(() {
                             _pageCount = details.document.pages.count;
