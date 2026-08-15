@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+import 'package:in_app_update/in_app_update.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/pdf_viewer_screen.dart';
@@ -33,6 +34,23 @@ class _OfflinePdfStudioAppState extends State<OfflinePdfStudioApp> {
     super.initState();
     if (!kIsWeb) {
       _initIntentListener();
+      _checkForUpdate();
+    }
+  }
+
+  Future<void> _checkForUpdate() async {
+    try {
+      final AppUpdateInfo info = await InAppUpdate.checkForUpdate();
+      if (info.updateAvailability == UpdateAvailability.updateAvailable) {
+        if (info.immediateUpdateAllowed) {
+          await InAppUpdate.performImmediateUpdate();
+        } else if (info.flexibleUpdateAllowed) {
+          await InAppUpdate.startFlexibleUpdate();
+          await InAppUpdate.completeFlexibleUpdate();
+        }
+      }
+    } catch (e) {
+      debugPrint("In-app update check failed: $e");
     }
   }
 
