@@ -7,6 +7,7 @@ import '../utils/file_saver.dart';
 import '../mixins/processing_state_mixin.dart';
 import '../widgets/ad_banner.dart';
 import 'success_screen.dart';
+import 'package:gal/gal.dart';
 
 class ImageToPdfScreen extends StatefulWidget {
   final List<PlatformFile> images;
@@ -61,6 +62,33 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> with ProcessingStat
     });
   }
 
+  Future<void> _saveToGallery() async {
+    await runProcessingTask(() async {
+      try {
+        bool hasAccess = await Gal.hasAccess();
+        if (!hasAccess) {
+          hasAccess = await Gal.requestAccess();
+        }
+        if (hasAccess) {
+          for (var file in _images) {
+            if (file.path != null) {
+              await Gal.putImage(file.path!);
+            }
+          }
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Saved to Gallery!'), backgroundColor: Colors.green),
+            );
+          }
+        } else {
+          showErrorSnackBar('Permission denied to save to gallery.');
+        }
+      } catch (e) {
+        showErrorSnackBar('Failed to save to gallery: $e');
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,39 +102,54 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> with ProcessingStat
         foregroundColor: const Color(0xFF1E1E1E),
         elevation: 0,
         scrolledUnderElevation: 1,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.save_alt),
+            tooltip: 'Save Images to Gallery',
+            onPressed: isProcessing ? null : _saveToGallery,
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
-      body: _images.isEmpty
-          ? const Center(child: Text('No images selected.'))
-          : ReorderableListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _images.length,
-              onReorder: _reorderImages,
-              itemBuilder: (context, index) {
-                final file = _images[index];
-                return Card(
-                  key: ValueKey(file.name + index.toString()),
-                  elevation: 2,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  child: ListTile(
-                    leading: SizedBox(
-                      width: 50,
-                      height: 50,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: (kIsWeb && file.bytes != null)
-                            ? Image.memory(file.bytes!, fit: BoxFit.cover, cacheWidth: 150)
-                            : (file.path != null)
-                                ? Image.file(File(file.path!), fit: BoxFit.cover, cacheWidth: 150)
-                                : const Icon(Icons.image),
-                      ),
-                    ),
-                    title: Text(file.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text('Image ${index + 1}'),
-                    trailing: const Icon(Icons.drag_handle, color: Colors.grey),
+      body: Column(
+        children: [
+          const AdBannerWidget(adUnitId: 'ca-app-pub-3884228712419530/9931649694'),
+          Expanded(
+            child: _images.isEmpty
+                ? const Center(child: Text('No images selected.'))
+                : ReorderableListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _images.length,
+                    onReorder: _reorderImages,
+                    itemBuilder: (context, index) {
+                      final file = _images[index];
+                      return Card(
+                        key: ValueKey(file.name + index.toString()),
+                        elevation: 2,
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        child: ListTile(
+                          leading: SizedBox(
+                            width: 50,
+                            height: 50,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: (kIsWeb && file.bytes != null)
+                                  ? Image.memory(file.bytes!, fit: BoxFit.cover, cacheWidth: 150)
+                                  : (file.path != null)
+                                      ? Image.file(File(file.path!), fit: BoxFit.cover, cacheWidth: 150)
+                                      : const Icon(Icons.image),
+                            ),
+                          ),
+                          title: Text(file.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                          subtitle: Text('Image ${index + 1}'),
+                          trailing: const Icon(Icons.drag_handle, color: Colors.grey),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: isProcessing ? null : _convertToPdf,
         backgroundColor: const Color(0xFFD32F2F),

@@ -72,7 +72,10 @@ class _OfflinePdfStudioAppState extends State<OfflinePdfStudioApp> {
   void _handleSharedFiles(List<SharedMediaFile> files) {
     if (files.isNotEmpty) {
       final file = files.first;
-      if (file.path.toLowerCase().endsWith('.pdf') || (file.mimeType?.contains('pdf') ?? false)) {
+      final pathLower = file.path.toLowerCase();
+      final mime = file.mimeType?.toLowerCase() ?? '';
+
+      if (pathLower.endsWith('.pdf') || mime.contains('pdf')) {
         // Navigate to PdfViewerScreen once the navigator is ready
         WidgetsBinding.instance.addPostFrameCallback((_) {
           navigatorKey.currentState?.push(

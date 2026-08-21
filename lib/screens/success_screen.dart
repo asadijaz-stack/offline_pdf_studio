@@ -39,6 +39,7 @@ class SuccessScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
+            const AdBannerWidget(adUnitId: 'ca-app-pub-3884228712419530/9931649694'),
             Expanded(
               child: Center(
                 child: ConstrainedBox(

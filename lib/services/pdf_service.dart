@@ -97,6 +97,10 @@ class PdfService {
         document = PdfDocument(inputBytes: File(fileInput as String).readAsBytesSync());
       }
       
+      // Disable incremental updates and use stream to reduce file size
+      document.fileStructure.incrementalUpdate = false;
+      document.fileStructure.crossReferenceType = PdfCrossReferenceType.crossReferenceStream;
+      
       // Syncfusion applies comprehensive compression to the document structure
       document.compressionLevel = PdfCompressionLevel.best;
       

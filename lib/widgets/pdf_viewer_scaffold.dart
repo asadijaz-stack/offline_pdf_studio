@@ -142,6 +142,7 @@ class _PdfViewerScaffoldState extends State<PdfViewerScaffold> {
       ),
       body: Column(
         children: [
+          const AdBannerWidget(adUnitId: 'ca-app-pub-3884228712419530/9931649694'),
           Expanded(
             child: (widget.fileBytes != null)
                 ? SfPdfViewer.memory(

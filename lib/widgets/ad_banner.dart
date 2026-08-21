@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AdBannerWidget extends StatefulWidget {
-  const AdBannerWidget({super.key});
+  final String? adUnitId;
+
+  const AdBannerWidget({super.key, this.adUnitId});
 
   @override
   State<AdBannerWidget> createState() => _AdBannerWidgetState();
@@ -14,11 +16,12 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
   bool _isLoaded = false;
 
   // Standard test ad unit ID for Android banners
-  final String _adUnitId = 'ca-app-pub-3884228712419530/1686299912';
+  late final String _adUnitId;
 
   @override
   void initState() {
     super.initState();
+    _adUnitId = widget.adUnitId ?? 'ca-app-pub-3884228712419530/1686299912';
     if (!kIsWeb) {
       _loadAd();
     }
@@ -69,14 +72,11 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
     }
 
     if (_isLoaded && _bannerAd != null) {
-      return Align(
-        alignment: Alignment.bottomCenter,
-        child: SafeArea(
-          child: SizedBox(
-            width: _bannerAd!.size.width.toDouble(),
-            height: _bannerAd!.size.height.toDouble(),
-            child: AdWidget(ad: _bannerAd!),
-          ),
+      return SafeArea(
+        child: SizedBox(
+          width: _bannerAd!.size.width.toDouble(),
+          height: _bannerAd!.size.height.toDouble(),
+          child: AdWidget(ad: _bannerAd!),
         ),
       );
     }

@@ -79,27 +79,34 @@ class _MergePreviewScreenState extends State<MergePreviewScreen> with Processing
         elevation: 0,
         scrolledUnderElevation: 1,
       ),
-      body: _files.isEmpty
-          ? const Center(child: Text('No files selected.'))
-          : ReorderableListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _files.length,
-              onReorder: _reorderFiles,
-              itemBuilder: (context, index) {
-                final file = _files[index];
-                return Card(
-                  key: ValueKey(file.name + index.toString()),
-                  elevation: 2,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  child: ListTile(
-                    leading: const Icon(Icons.picture_as_pdf, color: Color(0xFFD32F2F)),
-                    title: Text(file.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text('File ${index + 1}'),
-                    trailing: const Icon(Icons.drag_handle, color: Colors.grey),
+      body: Column(
+        children: [
+          const AdBannerWidget(adUnitId: 'ca-app-pub-3884228712419530/9931649694'),
+          Expanded(
+            child: _files.isEmpty
+                ? const Center(child: Text('No files selected.'))
+                : ReorderableListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _files.length,
+                    onReorder: _reorderFiles,
+                    itemBuilder: (context, index) {
+                      final file = _files[index];
+                      return Card(
+                        key: ValueKey(file.name + index.toString()),
+                        elevation: 2,
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        child: ListTile(
+                          leading: const Icon(Icons.picture_as_pdf, color: Color(0xFFD32F2F)),
+                          title: Text(file.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                          subtitle: Text('File ${index + 1}'),
+                          trailing: const Icon(Icons.drag_handle, color: Colors.grey),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: isProcessing ? null : _mergeAndSave,
         backgroundColor: const Color(0xFFD32F2F),

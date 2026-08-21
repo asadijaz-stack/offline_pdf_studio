@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:open_filex/open_filex.dart';
 import '../widgets/ad_banner.dart';
 import 'pdf_viewer_screen.dart';
 import 'merge_preview_screen.dart';
@@ -10,6 +9,7 @@ import 'compress_preview_screen.dart';
 import 'image_to_pdf_screen.dart';
 import 'pdf_to_image_screen.dart';
 import 'privacy_policy_screen.dart';
+import 'package:cunning_document_scanner/cunning_document_scanner.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -24,6 +24,12 @@ class HomeScreen extends StatelessWidget {
           withData: kIsWeb,
         );
         if (result != null && context.mounted) {
+          if (result.files.length < 2) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Please select at least 2 PDF files to merge.')),
+            );
+            return;
+          }
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -59,21 +65,30 @@ class HomeScreen extends StatelessWidget {
             ),
           );
         }
-      } else if (title == 'Image to PDF') {
-        FilePickerResult? result = await FilePicker.pickFiles(
-          allowMultiple: true,
-          type: FileType.custom,
-          allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'bmp'],
-          withData: kIsWeb,
-        );
-        if (result != null && context.mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ImageToPdfScreen(images: result.files),
-            ),
-          );
+      } else if (title == 'Scan Image') {
+        try {
+          List<String> pictures = await CunningDocumentScanner.getPictures(scannerSource: ScannerSource.cameraAndGallery) ?? [];
+          if (pictures.isNotEmpty && context.mounted) {
+            List<PlatformFile> platformFiles = pictures.map((path) => PlatformFile(
+              name: path.split('/').last,
+              size: 0,
+              path: path,
+            )).toList();
+            
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ImageToPdfScreen(images: platformFiles),
+              ),
+            );
+          }
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Scanner Error: $e')));
+          }
         }
+        return;
+
       } else if (title == 'PDF to Image') {
         FilePickerResult? result = await FilePicker.pickFiles(
           type: FileType.custom,
@@ -85,20 +100,6 @@ class HomeScreen extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (_) => PdfToImageScreen(file: result.files.single),
-            ),
-          );
-        }
-      } else if (title == 'Office Viewer') {
-        FilePickerResult? result = await FilePicker.pickFiles(
-          type: FileType.custom,
-          allowedExtensions: ['docx', 'xlsx', 'pptx'],
-        );
-        if (result != null && result.files.single.path != null) {
-          await OpenFilex.open(result.files.single.path!);
-        } else if (kIsWeb && context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Office Viewer requires a native app on mobile.'),
             ),
           );
         }
@@ -143,6 +144,12 @@ class HomeScreen extends StatelessWidget {
         'badge': 'New',
       },
       {
+        'title': 'Scan Image',
+        'subtitle': 'Scan documents with camera',
+        'icon': Icons.document_scanner_outlined,
+        'badge': 'Fast',
+      },
+      {
         'title': 'Merge PDFs',
         'subtitle': 'Combine multiple files into one',
         'icon': Icons.call_merge_rounded,
@@ -160,23 +167,12 @@ class HomeScreen extends StatelessWidget {
         'icon': Icons.compress_rounded,
         'badge': 'Fast',
       },
-      {
-        'title': 'Image to PDF',
-        'subtitle': 'Convert photos to document',
-        'icon': Icons.image_outlined,
-        'badge': null,
-      },
+
       {
         'title': 'PDF to Image',
         'subtitle': 'Extract pages as JPEG/PNG',
         'icon': Icons.picture_as_pdf_outlined,
         'badge': null,
-      },
-      {
-        'title': 'Office Viewer',
-        'subtitle': 'Open Word, Excel & PPT',
-        'icon': Icons.description_outlined,
-        'badge': 'Free',
       },
     ];
 
@@ -243,33 +239,8 @@ class HomeScreen extends StatelessWidget {
                   child: ListView(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     children: [
-                      // Privacy Trust Banner
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE8F5E9),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFA5D6A7)),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.shield_outlined, color: Color(0xFF2E7D32), size: 22),
-                            SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                '100% Offline & Private. Your files never leave this device.',
-                                style: TextStyle(
-                                  color: Color(0xFF1B5E20),
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      const AdBannerWidget(adUnitId: 'ca-app-pub-3884228712419530/9931649694'),
                       const SizedBox(height: 16),
-
                       // Responsive Tool Grid
                       LayoutBuilder(
                         builder: (context, constraints) {
@@ -296,6 +267,32 @@ class HomeScreen extends StatelessWidget {
                             },
                           );
                         },
+                      ),
+                      const SizedBox(height: 16),
+                      // Privacy Trust Banner
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F5E9),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFA5D6A7)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.shield_outlined, color: Color(0xFF2E7D32), size: 22),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                '100% Offline & Private. Your files never leave this device.',
+                                style: TextStyle(
+                                  color: Color(0xFF1B5E20),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
